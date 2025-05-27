@@ -8,7 +8,7 @@ import (
 	"github.com/gomarkdown/markdown/parser"
 )
 
-func telegramify(s string) (string, error) {
+func Telegramify(s string) (string, error) {
 	md := []byte(s)
 	p := parser.New()
 	doc := p.Parse(md)
