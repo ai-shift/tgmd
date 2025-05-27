@@ -16,5 +16,5 @@ func Telegramify(s string) string {
 	renderer := markdownv2.NewRenderer(opts)
 	escaped := markdown.Render(doc, renderer)
 	log.Println("Escaped", string(escaped))
-	return strng(escaped)
+	return string(escaped)
 }

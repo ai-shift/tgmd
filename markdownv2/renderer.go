@@ -1,6 +1,7 @@
 package markdownv2
 
 import (
+  "log"
 	"bytes"
 	"fmt"
 	"io"
@@ -8,13 +9,9 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
-// Flags control optional behavior of Telegram MarkdownV2 renderer.
-type Flags int
-
 // RendererOptions is a collection of supplementary parameters tweaking
 // the behavior of various parts of Telegram MarkdownV2 renderer.
 type RendererOptions struct {
-	AbsolutePrefix string // Prepend this text to each relative URL.
 }
 
 // Renderer implements Renderer interface for Telegram MarkdownV2 output.
@@ -49,7 +46,7 @@ var telegramEscaper = map[byte][]byte{
 	'}':  []byte("\\}"),
 	'.':  []byte("\\."),
 	'!':  []byte("\\!"),
-	'\\': []byte("\\\\"), // Escape backslash itself
+	'\\': []byte("\\\\"),
 }
 
 func EscapeTelegram(w io.Writer, d []byte) {
@@ -70,11 +67,11 @@ func EscapeTelegram(w io.Writer, d []byte) {
 }
 
 func (r *Renderer) Out(w io.Writer, d []byte) {
-	EscapeTelegram(w, d)
+	w.Write(d)
 }
 
 func (r *Renderer) Outs(w io.Writer, s string) {
-	EscapeTelegram(w, []byte(s))
+	w.Write([]byte(s))
 }
 
 func (r *Renderer) CR(w io.Writer) {
@@ -85,17 +82,21 @@ func (r *Renderer) CR(w io.Writer) {
 func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
 	switch node := node.(type) {
 	case *ast.Text:
-		r.Out(w, node.Literal)
+    log.Println("node", string(node.Literal))
+		EscapeTelegram(w, node.Literal)
 	case *ast.Emph:
-		r.OutOneOf(w, entering, "_", "_")
+		r.Outs(w, "_")
 	case *ast.Strong:
-		r.OutOneOf(w, entering, "*", "*")
+    r.Outs(w, "*")
 	case *ast.Del:
-		r.OutOneOf(w, entering, "~", "~")
+    r.Outs(w, "~")
 	case *ast.BlockQuote:
+    log.Println("Got quote", node)
 		if entering {
 			r.Outs(w, ">")
-		}
+		} else {
+      r.CR(w)
+    }
 	case *ast.Link:
 		if entering {
 			dest := node.Destination
@@ -130,7 +131,6 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		if len(node.Info) > 0 {
 			language = string(node.Info)
 		}
-		r.CR(w)
 		r.Outs(w, "```")
 		r.Outs(w, language)
 		r.CR(w)
@@ -139,7 +139,6 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.Out(w, code)
 		r.CR(w)
 		r.Outs(w, "```")
-		r.CR(w)
 
 	case *ast.List:
 		// do nothing
@@ -153,25 +152,16 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.CR(w)
 
 	case *ast.Paragraph:
-		if entering {
-		} else {
+		if !entering {
 			r.CR(w)
 			r.CR(w)
 		}
 	case *ast.Heading:
-		// Telegram doesn't really have heading support.  Emphasize.
-		if entering {
-			for i := 0; i < node.Level; i++ {
-				r.Outs(w, "*")
-			}
-		} else {
-			for i := 0; i < node.Level; i++ {
-				r.Outs(w, "*")
-			}
+    r.Outs(w, "*")
+		if !entering {
 			r.CR(w)
 			r.CR(w)
-		}
-
+    }
 	case *ast.HTMLSpan:
 		// Ignore HTML
 	case *ast.HTMLBlock:
@@ -185,7 +175,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		// do nothing
 	case *ast.Table:
 		r.CR(w)
-		r.Outs(w, "Tables are not supported in Telegram MarkdownV2")
+		r.Outs(jw, "Tables are not supported in Telegram MarkdownV2")
 		r.CR(w)
 	case *ast.TableCell:
 	case *ast.TableHeader:
@@ -193,14 +183,12 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.TableRow:
 	case *ast.TableFooter:
 	case *ast.Math:
-		//render math
 		r.Outs(w, "`")
 		code := bytes.ReplaceAll(node.Literal, []byte("`"), []byte("\\`"))
 		code = bytes.ReplaceAll(code, []byte("\\"), []byte("\\\\"))
 		r.Out(w, code)
 		r.Outs(w, "`")
 	case *ast.MathBlock:
-		//render math
 		r.CR(w)
 		r.Outs(w, "```")
 		r.CR(w)
@@ -211,17 +199,13 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.Outs(w, "```")
 		r.CR(w)
 	case *ast.Subscript:
-		r.OutOneOf(w, entering, "__", "__")
+		r.Outs(w, "__")
 		if entering {
 			EscapeTelegram(w, node.Literal)
 		}
-		r.OutOneOf(w, false, "__", "__")
+		r.Outs(w, "__")
 	case *ast.Superscript:
-		r.OutOneOf(w, entering, "^", "^")
-		if entering {
-			EscapeTelegram(w, node.Literal)
-		}
-		r.OutOneOf(w, false, "^", "^")
+    // Ignore
 	case *ast.DocumentMatter:
 		// Ignore
 	case *ast.Callout:
@@ -241,12 +225,3 @@ func (r *Renderer) RenderHeader(w io.Writer, ast ast.Node) {}
 
 // RenderFooter writes nothing for Telegram MarkdownV2.
 func (r *Renderer) RenderFooter(w io.Writer, node ast.Node) {}
-
-// OutOneOf writes first or second depending on outFirst
-func (r *Renderer) OutOneOf(w io.Writer, outFirst bool, first string, second string) {
-	if outFirst {
-		r.Outs(w, first)
-	} else {
-		r.Outs(w, second)
-	}
-}
