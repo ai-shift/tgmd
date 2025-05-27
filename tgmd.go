@@ -8,7 +8,7 @@ import (
 	"github.com/gomarkdown/markdown/parser"
 )
 
-func Telegramify(s string) (string, error) {
+func Telegramify(s string) string {
 	md := []byte(s)
 	p := parser.New()
 	doc := p.Parse(md)
@@ -16,5 +16,5 @@ func Telegramify(s string) (string, error) {
 	renderer := markdownv2.NewRenderer(opts)
 	escaped := markdown.Render(doc, renderer)
 	log.Println("Escaped", string(escaped))
-	return "lol", nil
+	return escaped
 }
