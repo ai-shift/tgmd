@@ -1,4 +1,4 @@
-module github.com/ai-shift/tgmd
+module github.com/ai-shift/tgmd v0.1.0
 
 go 1.24.3
 
