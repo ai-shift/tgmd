@@ -1,7 +1,6 @@
 package markdownv2
 
 import (
-  "log"
 	"bytes"
 	"fmt"
 	"io"
@@ -82,7 +81,6 @@ func (r *Renderer) CR(w io.Writer) {
 func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
 	switch node := node.(type) {
 	case *ast.Text:
-    log.Println("node", string(node.Literal))
 		EscapeTelegram(w, node.Literal)
 	case *ast.Emph:
 		r.Outs(w, "_")
@@ -91,7 +89,6 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Del:
     r.Outs(w, "~")
 	case *ast.BlockQuote:
-    log.Println("Got quote", node)
 		if entering {
 			r.Outs(w, ">")
 		} else {
