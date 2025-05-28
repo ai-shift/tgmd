@@ -85,21 +85,17 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Emph:
 		r.Outs(w, "_")
 	case *ast.Strong:
-    r.Outs(w, "*")
+		r.Outs(w, "*")
 	case *ast.Del:
-    r.Outs(w, "~")
+		r.Outs(w, "~")
 	case *ast.BlockQuote:
 		if entering {
 			r.Outs(w, ">")
 		} else {
-      r.CR(w)
-    }
+			r.CR(w)
+		}
 	case *ast.Link:
 		if entering {
-			dest := node.Destination
-			if r.Opts.AbsolutePrefix != "" {
-				dest = []byte(r.Opts.AbsolutePrefix + string(dest))
-			}
 			r.Outs(w, "[")
 		} else {
 			r.Outs(w, "](")
@@ -154,11 +150,11 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 			r.CR(w)
 		}
 	case *ast.Heading:
-    r.Outs(w, "*")
+		r.Outs(w, "*")
 		if !entering {
 			r.CR(w)
 			r.CR(w)
-    }
+		}
 	case *ast.HTMLSpan:
 		// Ignore HTML
 	case *ast.HTMLBlock:
@@ -172,7 +168,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		// do nothing
 	case *ast.Table:
 		r.CR(w)
-		r.Outs(jw, "Tables are not supported in Telegram MarkdownV2")
+		r.Outs(w, "Tables are not supported in Telegram MarkdownV2")
 		r.CR(w)
 	case *ast.TableCell:
 	case *ast.TableHeader:
@@ -202,7 +198,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		}
 		r.Outs(w, "__")
 	case *ast.Superscript:
-    // Ignore
+		// Ignore
 	case *ast.DocumentMatter:
 		// Ignore
 	case *ast.Callout:

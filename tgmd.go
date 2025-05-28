@@ -10,7 +10,7 @@ func Telegramify(s string) string {
 	md := []byte(s)
 	p := parser.New()
 	doc := p.Parse(md)
-	opts := markdownv2.RendererOptions{AbsolutePrefix: ""}
+	opts := markdownv2.RendererOptions{}
 	renderer := markdownv2.NewRenderer(opts)
 	escaped := markdown.Render(doc, renderer)
 	return string(escaped)
