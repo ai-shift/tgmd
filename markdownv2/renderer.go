@@ -137,7 +137,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		// do nothing
 	case *ast.ListItem:
 		if entering {
-			r.Outs(w, "- ") // Telegram doesn't support ordered lists
+			r.Outs(w, "· ") // Telegram doesn't support ordered lists
 		}
 	case *ast.HorizontalRule:
 		r.CR(w)
@@ -146,7 +146,6 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 
 	case *ast.Paragraph:
 		if !entering {
-			r.CR(w)
 			r.CR(w)
 		}
 	case *ast.Heading:
@@ -162,7 +161,6 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Softbreak:
 		r.CR(w)
 	case *ast.Hardbreak:
-		r.CR(w)
 		r.CR(w)
 	case *ast.Document:
 		// do nothing
