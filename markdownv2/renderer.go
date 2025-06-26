@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log/slog"
+	"strings"
 
 	"github.com/gomarkdown/markdown/ast"
 )
@@ -79,9 +81,19 @@ func (r *Renderer) CR(w io.Writer) {
 
 // RenderNode renders a markdown node to Telegram MarkdownV2
 func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
+	slog.Debug("rendering node", "type", fmt.Sprintf("%T", node))
 	switch node := node.(type) {
 	case *ast.Text:
-		EscapeTelegram(w, node.Literal)
+		slog.Debug("text node literal", "value", node.Literal)
+		_, isBlockQuote := node.Parent.(*ast.BlockQuote)
+		if isBlockQuote {
+			for line := range strings.Lines(string(node.Literal)) {
+				r.Outs(w, "> ")
+				EscapeTelegram(w, []byte(line))
+			}
+		} else {
+			EscapeTelegram(w, node.Literal)
+		}
 	case *ast.Emph:
 		r.Outs(w, "_")
 	case *ast.Strong:
@@ -89,11 +101,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Del:
 		r.Outs(w, "~")
 	case *ast.BlockQuote:
-		if entering {
-			r.Outs(w, ">")
-		} else {
-			r.CR(w)
-		}
+		// Processed in paragraph block
 	case *ast.Link:
 		if entering {
 			r.Outs(w, "[")
@@ -130,12 +138,17 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		code := bytes.ReplaceAll(node.Literal, []byte("`"), []byte("\\`"))
 		code = bytes.ReplaceAll(code, []byte("\\"), []byte("\\\\"))
 		r.Out(w, code)
-		r.CR(w)
 		r.Outs(w, "```")
+		r.CR(w)
+		r.CR(w)
 
 	case *ast.List:
-		// do nothing
+		slog.Debug("rendering list", "value", fmt.Sprintf("%#v", node))
+		if !entering {
+			r.CR(w)
+		}
 	case *ast.ListItem:
+		slog.Debug("rendering list item", "value", fmt.Sprintf("%#v", node), "entering", entering)
 		if entering {
 			r.Outs(w, "· ") // Telegram doesn't support ordered lists
 		}
@@ -145,8 +158,18 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.CR(w)
 
 	case *ast.Paragraph:
-		if !entering {
+		_, isList := node.Container.Parent.(*ast.ListItem)
+		_, isBlockQuote := node.Container.Parent.(*ast.BlockQuote)
+		slog.Debug("paragraph node", "value", fmt.Sprintf("%#v", node), "isList", isList)
+		if entering {
+			if isBlockQuote {
+				r.Outs(w, "> ")
+			}
+		} else {
 			r.CR(w)
+			if !isList {
+				r.CR(w)
+			}
 		}
 	case *ast.Heading:
 		r.Outs(w, "*")
