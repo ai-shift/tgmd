@@ -1,3 +1,5 @@
+// Whatever reason my new tag is ignored by `go get` cmd
+// let me create a new one, who knows if it'll help
 package tgmd
 
 import (
