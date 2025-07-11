@@ -22,9 +22,13 @@ func TestRenderTelegram(t *testing.T) {
 	gotLines := slices.Collect(strings.Lines(got))
 	expectedLines := slices.Collect(strings.Lines(string(expected)))
 	for i := 0; i < len(gotLines); i++ {
+		if i == len(expectedLines) {
+			t.Errorf("Out of expected lines. Got: '%s'\n.Full:\n%s\nExpected:\n%s", gotLines[i:], got, expected)
+			break
+		}
 		if gotLines[i] != expectedLines[i] {
 			t.Errorf("line %d differs\ngot     : '%s'\nexpected: '%s'\nFull:\n%s", i+1, gotLines[i], expectedLines[i], got)
-			t.Fatal()
+			break
 		}
 	}
 }

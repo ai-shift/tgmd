@@ -112,7 +112,6 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		}
 	case *ast.Image:
 		if entering {
-			r.Outs(w, "!")
 			r.Outs(w, "[")
 		} else {
 			r.Outs(w, "](")

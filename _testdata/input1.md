@@ -66,3 +66,7 @@ print(message)
 
 [Google](https://www.google.com)
 [Local link to a section](https://www.google.com/search?q=%231.-headings)
+
+## 7. Images
+
+![Caption](http://example.com)
