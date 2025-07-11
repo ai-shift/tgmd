@@ -1,3 +1,6 @@
+include .env.example
+-include .env
+
 run: format
 	go run ./main.go
 
