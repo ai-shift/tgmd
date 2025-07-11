@@ -4,9 +4,9 @@ import (
 	"log/slog"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
-	"strconv"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
